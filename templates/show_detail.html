@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+ 
+   <ul class="entries">
+<center> 
+  {% if tool_titile %}
+  <li>{{ tool_titile }}</li>
+  {% endif %}
+
+  {% if tool_des %}
+  <li>简介：{{ tool_des }}</li>
+  {% endif %}
+</center> 
+  </ul>
+  <center> 
+   <form action="{{ url_for('execute') }}" method="post">
+    
+    <dl>
+    <input type="hidden"  name="tool_id" value="{{ tool_id }}"> 
+  {% if tool_hasargs != 0 %}
+  参数: 
+ <input type="text" name="args">
+  {% else %}
+  <input type=hidden name="args">
+  {% endif %}
+     <input type="submit" value="执行">
+    </dl>
+  </form>
+  <center> 
+{% endblock %}

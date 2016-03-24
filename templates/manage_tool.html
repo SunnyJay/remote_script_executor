@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+  <center>
+  <table >
+  <tr>
+  <td style="text-align: left;">
+    <form  action="{{ url_for('add_entry') }}" method="post" class="add-entry">
+      <dl>
+        <dt><p align="top">名称:</p><input type="text" size="30" name="title">
+      </dl>
+      <dl>
+        <dt><p align="top">路径:</p><input type="text" size="30" name="toolpath" value="格式为：模块.类.方法">
+      </dl>
+      <dl>
+        <dt><p align="top">描述:</p><textarea name="content" rows="5" cols="40"></textarea>
+      </dl>
+            <dl>
+        <dt><p align="top">参数:</p>
+<select  name="hasargs">
+  <option value ="0">无</option>
+  <option value ="1">有</option>
+</select>
+      </dl>
+      <dl>
+        <dt><p align="top">权限:</p>
+<select  name="auth">
+  <option value ="0">仅管理员</option>
+  <option value ="1">所有人员</option>
+</select>
+      </dl>
+      <dl>
+        <dt><p align="top">状态:</p>
+<select  name="showtag">
+  <option value ="0">关闭</option>
+  <option value ="1">显示</option>
+</select>
+      </dl>
+      <dl style="text-align: center;">
+      <input type="submit" value="提交" >
+      </dl>
+    </form>
+    </td>
+    </tr>
+
+    </table>
+    </center>
+
+  {% endif %}
+  <h2>所有工具：</h2>
+  <ul class="entries">
+  {% for entry in entries %}
+    <li><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
+    &nbsp;&nbsp;
+    {% if entry.auth == 0 %}
+    管理员
+    {% else%}
+    所有人
+    {% endif %}
+    
+    &nbsp;&nbsp;
+    {% if entry.showtag == 0 %}
+    关闭
+    {% else%}
+    显示
+    {% endif %}
+    &nbsp;&nbsp;
+    <a href="{{ url_for('delete')}}?tool_id={{ entry.id }}">删除</a>
+  {% else %}
+    <li><em>目前没有任何工具</em>
+  {% endfor %}
+  </ul>
+{% endblock %}

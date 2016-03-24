@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>目前提供如下工具：</h2>
+  <ul class="entries">
+  {% for entry in entries %}
+  {% if entry.auth == 1 and entry.showtag == 1 %}
+    <li><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>&nbsp;&nbsp;{{ entry.content|safe }}
+   {% else%}
+   {% endif %}
+   
+  {% else %}
+    <li><em>目前没有任何工具</em>
+  {% endfor %}
+  </ul>
+{% endblock %}

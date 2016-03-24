@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+  <center>
+  <table >
+  <tr>
+  <td style="text-align: left;">
+    <form  action="{{ url_for('config_cache_info') }}" method="post" class="add-entry">
+      <dl>
+        <dt><p align="top">集群信息:</p><textarea name="cache_info" rows="5" cols="40">{{cache_info}}</textarea>
+      </dl>
+      <dl style="text-align: center;">
+      <input type="submit" value="保存" >
+      </dl>
+    </form>
+    </td>
+    </tr>
+
+    </table>
+    </center>
+     {% endif %}
+{% endblock %}

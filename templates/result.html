@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block body %}
+ 
+   
+  {% if args %}
+  <h2>参数：</h2>
+  {{ args }}
+  {% endif %}
+  <h2>执行结果：</h2>
+    {% if output %}
+  <pre style = 'border:solid  1px #000;'>{{ output }}</pre>
+  {% endif %}
+{% endblock %}
