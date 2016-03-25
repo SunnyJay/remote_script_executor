@@ -5,39 +5,78 @@
   <table >
   <tr>
   <td style="text-align: left;">
+  {% if target %}
+    <form  action="{{ url_for('update_entry')}}?tool_id={{ target.id }}" method="post" class="add-entry">
+    {% else %}
     <form  action="{{ url_for('add_entry') }}" method="post" class="add-entry">
+    {% endif%}
       <dl>
-        <dt><p align="top">名称:</p><input type="text" size="30" name="title">
+        <dt><p align="top">名称:</p>
+        {% if target %}
+        <input type="text" size="30" name="title" value="{{target.title}}">
+        {% else %}
+        <input type="text" size="30" name="title">
+        {% endif%}
       </dl>
       <dl>
-        <dt><p align="top">路径:</p><input type="text" size="30" name="toolpath" value="格式为：模块.类.方法">
+        <dt><p align="top">路径:</p>
+         {% if target %}
+        <input type="text" size="30" name="toolpath" value="{{target.toolpath}}">
+        {% else %}
+        <input type="text" size="30" name="toolpath" value="格式为：模块.类.方法">
+        {% endif%}
       </dl>
       <dl>
-        <dt><p align="top">描述:</p><textarea name="content" rows="5" cols="40"></textarea>
+        <dt><p align="top">描述:</p>
+        {% if target %}
+        <textarea name="content" rows="5" cols="40">{{target.content}}</textarea>
+        {% else %}
+        <textarea name="content" rows="5" cols="40"></textarea>
+        {% endif%}
+        
       </dl>
             <dl>
         <dt><p align="top">参数:</p>
 <select  name="hasargs">
-  <option value ="0">无</option>
+{% if target and target.hasargs == 0 %}
+  <option value ="0" selected="true">无</option>
   <option value ="1">有</option>
+{% else %}
+  <option value ="0" >无</option>
+  <option value ="1" selected="true">有</option>
+{% endif%}
 </select>
       </dl>
       <dl>
         <dt><p align="top">权限:</p>
 <select  name="auth">
-  <option value ="0">仅管理员</option>
+{% if target and target.auth == 0 %}
+  <option value ="0" selected="true">仅管理员</option>
   <option value ="1">所有人员</option>
+  {% else %}
+    <option value ="0">仅管理员</option>
+  <option value ="1" selected="true">所有人员</option>
+  {% endif%}
 </select>
       </dl>
       <dl>
         <dt><p align="top">状态:</p>
 <select  name="showtag">
-  <option value ="0">关闭</option>
+{% if target and target.showtag == 0 %}
+  <option value ="0" selected="true">关闭</option>
   <option value ="1">显示</option>
+    {% else %}
+      <option value ="0">关闭</option>
+  <option value ="1" selected="true">显示</option>
+      {% endif%}
 </select>
       </dl>
       <dl style="text-align: center;">
-      <input type="submit" value="提交" >
+      {% if target %}
+      <input type="submit" value="更新" >
+      {% else %}
+      <input type="submit" value="添加" >
+      {% endif%}
       </dl>
     </form>
     </td>
@@ -45,29 +84,52 @@
 
     </table>
     </center>
-
+ 
   {% endif %}
-  <h2>所有工具：</h2>
-  <ul class="entries">
+ <hr>
+ <center>
+  {% if not target %}
+
+  <h2>所有工具</h2>
+  <table class="table">
+
+    <thead>
+<th>工具名称</th>
+<th>使用权限</th>
+<th>状态</th>
+<th>修改</th>
+<th>删除</th>
+</thead>
+
   {% for entry in entries %}
-    <li><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
-    &nbsp;&nbsp;
+    <tr>
+    <td><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
+    </td>
+    <td>
     {% if entry.auth == 0 %}
     管理员
     {% else%}
     所有人
     {% endif %}
-    
-    &nbsp;&nbsp;
+    </td>
+    <td>
     {% if entry.showtag == 0 %}
     关闭
     {% else%}
     显示
     {% endif %}
-    &nbsp;&nbsp;
+    </td>
+     <td>
+    <a href="{{ url_for('update')}}?tool_id={{ entry.id }}">修改</a>
+    </td>
+    <td>
     <a href="{{ url_for('delete')}}?tool_id={{ entry.id }}">删除</a>
+    </td>
   {% else %}
-    <li><em>目前没有任何工具</em>
+    <em>目前没有任何工具</em>
+    </tr>
   {% endfor %}
-  </ul>
+  </table>
+  {% endif %}
+   </center>
 {% endblock %}

@@ -1,15 +1,37 @@
 {% extends "layout.html" %}
 {% block body %}
-  <h2>目前提供如下工具：</h2>
-  <ul class="entries">
+
+<center>
+  <h2>目前提供如下工具</h2>
+  </br>
+  
+  <table id="table-7">
+
+  <thead>
+<th>工具名称</th>
+<th>简介</th>
+
+</thead>
   {% for entry in entries %}
+  <tr>
   {% if entry.auth == 1 and entry.showtag == 1 %}
-    <li><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>&nbsp;&nbsp;{{ entry.content|safe }}
+   <td> 
+   <a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
+   </td> 
+   <td>
+   {{ entry.content|safe }}
    {% else%}
    {% endif %}
-   
+   </td>
+   </tr>
   {% else %}
-    <li><em>目前没有任何工具</em>
+  <em>目前没有任何工具</em>
   {% endfor %}
-  </ul>
+</table>
+{% if system_notice %}
+
+ <hr/>
+ <p style="text-align: right">{{ system_notice }}</p>
+</center>
+{% endif %}
 {% endblock %}

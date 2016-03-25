@@ -11,7 +11,7 @@
 
     <a href="{{ url_for('logout') }}">退出</a>
     <a href="{{ url_for('manage_tool') }}">管理工具</a>
-    <a href="{{ url_for('config') }}">配置集群</a>
+    <a href="{{ url_for('config') }}">系统配置</a>
   {% endif %}
   </div>
   {% for message in get_flashed_messages() %}

@@ -3,13 +3,22 @@
  
    <ul class="entries">
 <center> 
+<table>
+<tr>
+<td>
   {% if tool_titile %}
-  <li>{{ tool_titile }}</li>
+  {{ tool_titile }}
   {% endif %}
-
+  </td>
+</tr>
+<tr>
+<td>
   {% if tool_des %}
-  <li>简介：{{ tool_des }}</li>
+  简介：{{ tool_des }}
   {% endif %}
+  </td>
+  </tr>
+  </table>
 </center> 
   </ul>
   <center> 

@@ -1,13 +1,23 @@
 {% extends "layout.html" %}
 {% block body %}
- 
-   
-  {% if args %}
-  <h2>参数：</h2>
-  {{ args }}
-  {% endif %}
-  <h2>执行结果：</h2>
-    {% if output %}
-  <pre style = 'border:solid  1px #000;'>{{ output }}</pre>
-  {% endif %}
-{% endblock %}
+
+<center>
+<h3>
+{% if args %}
+参数：
+{{ args }}
+{% endif %}
+</h3>
+{% if output %}
+
+	
+	{% if output.startswith('Exception') %}
+	<textarea name="content" rows="20" cols="150" style="color:red;">
+	{% else %}		
+	<textarea name="content" rows="20" cols="150" style="color:green;">
+			{% endif %} 
+			{{ output }}
+	</textarea>
+	</center>
+	{% endif %}
+	{% endblock %}

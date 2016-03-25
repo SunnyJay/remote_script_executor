@@ -84,6 +84,16 @@ def delete():
     db.commit()
     return redirect(url_for('manage_tool'))
 
+@app.route('/update')
+def update():
+    tool_id = request.args.get("tool_id")
+    db = get_db()
+    cur = db.execute('select * from  entries where id=?',(tool_id,))
+    target = cur.fetchone()
+    #db.commit()
+    return render_template('manage_tool.html', target=target)
+
+
 @app.route('/manage_tool')
 def manage_tool():
     db = get_db()
@@ -94,25 +104,27 @@ def manage_tool():
 @app.route('/config')
 def config():
     db = get_db()
-    cur = db.execute('select cache_info from serverconfig')
+    cur = db.execute('select cache_info,system_notice from serverconfig')
     ret = cur.fetchone()
     if ret == None:
     	cache_info =''
+    	system_notice =''
     else:
     	cache_info = ret[0]
-    return render_template('config.html',cache_info=cache_info)
+    	system_notice = ret[1]
+    return render_template('config.html',cache_info=cache_info,system_notice=system_notice)
 
-@app.route('/config_cache_info',methods=['POST'])
-def config_cache_info():
+@app.route('/config_set',methods=['POST'])
+def config_set():
     db = get_db()
     db.execute('delete from serverconfig')
     db.commit()
     
-    db.execute('insert into serverconfig (cache_info) values (?)',
-               [request.form['cache_info']])
+    db.execute('insert into serverconfig (cache_info,system_notice) values (?,?)',
+               [request.form['cache_info'],request.form['system_notice']])
     db.commit()
     #print request.form['cache_info']
-    print configurations.cache_info
+    #print configurations.cache_info
     configurations.set_cache_info(request.form['cache_info'])
     return redirect(url_for('manage_tool'))
 
@@ -130,11 +142,11 @@ def execute():
         #print toolpath
         #print path
         sys.path.append(path)
-        module_name=toolpath.split('.')[0]
-        class_name=toolpath.split('.')[1]
-        method_name=toolpath.split('.')[2]
-        print module_name,method_name
         try:
+            module_name=toolpath.split('.')[0]
+       	    class_name=toolpath.split('.')[1]
+            method_name=toolpath.split('.')[2]
+        	#print module_name,method_name
             module = __import__(module_name)
             newclass = getattr(module,class_name)
             obj = newclass()
@@ -142,7 +154,8 @@ def execute():
             method = getattr(obj,method_name)
             output=method()
         except Exception,e:
-            output = e
+            flash('Execute Error!')
+            output = 'Exception:' + str(e)
         #output=module.fun()
         db.execute('insert into logs (ip,tool_id,exec_time) values (?, ?, ?)',
                [request.remote_addr, tool_id,time.strftime('%Y-%m-%d %H:%M:%S')])
@@ -172,7 +185,11 @@ def show_entries():
     db = get_db()
     cur = db.execute('select * from entries order by id desc')
     entries = cur.fetchall()
-    return render_template('show_entries.html', entries=entries)
+    cur = db.execute('select cache_info,system_notice from serverconfig')
+    config = cur.fetchone()
+    cache_info = config[0]
+    system_notice = config[1]
+    return render_template('show_entries.html', entries=entries,cache_info=cache_info,system_notice=system_notice)
 
 
 @app.route('/add', methods=['POST'])
@@ -180,6 +197,7 @@ def add_entry():
     if not session.get('logged_in'):
         abort(401)
     db = get_db()
+
     db.execute('insert into entries (title,toolpath,content,auth,showtag,addtime,hasargs) values (?, ?, ?, ?, ?, ?,?)',
                [request.form['title'], request.form['toolpath'],request.form['content'], 
                request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),request.form['hasargs']])
@@ -187,6 +205,18 @@ def add_entry():
     flash('Add Success!')
     return redirect(url_for('manage_tool'))
 
+@app.route('/update', methods=['POST'])
+def update_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    db = get_db()
+    
+    db.execute('update entries set title = ?,toolpath=?,content=?,auth=?,showtag=?,addtime=?,hasargs=? where id = ?',
+               [request.form['title'], request.form['toolpath'],request.form['content'], 
+               request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),request.form['hasargs'],request.args.get("tool_id")])
+    db.commit()
+    flash('Update Success!')
+    return redirect(url_for('manage_tool'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
