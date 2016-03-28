@@ -9,8 +9,8 @@
 
   <thead>
 <th>工具名称</th>
+<th>类型</th>
 <th>简介</th>
-
 </thead>
   {% for entry in entries %}
   <tr>
@@ -18,6 +18,9 @@
    <td> 
    <a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
    </td> 
+   <td>
+   {{ entry.tooltype }}
+   </td>
    <td>
    {{ entry.content|safe }}
    {% else%}

@@ -1,8 +1,8 @@
 <!doctype html>
-<title>Flaskr</title>
+<title>集群运维工具库</title>
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 <div class="page">
-  <h1>MSTP DSS Redis 集群运维工具库</h1>
+  <h1>集群运维工具库</h1>
   <div class="metanav">
   <a href="{{ url_for('show_entries') }}">首页</a>
   {% if not session.logged_in %}
@@ -11,6 +11,7 @@
 
     <a href="{{ url_for('logout') }}">退出</a>
     <a href="{{ url_for('manage_tool') }}">管理工具</a>
+    <a href="{{ url_for('checklog') }}">查看日志</a>
     <a href="{{ url_for('config') }}">系统配置</a>
   {% endif %}
   </div>

@@ -19,6 +19,14 @@
         {% endif%}
       </dl>
       <dl>
+        <dt><p align="top">类型:</p>
+        {% if target %}
+        <input type="text" size="30" name="tooltype" value="{{target.tooltype}}">
+        {% else %}
+        <input type="text" size="30" name="tooltype">
+        {% endif%}
+      </dl>
+      <dl>
         <dt><p align="top">路径:</p>
          {% if target %}
         <input type="text" size="30" name="toolpath" value="{{target.toolpath}}">
@@ -97,6 +105,7 @@
 <th>工具名称</th>
 <th>使用权限</th>
 <th>状态</th>
+<th>类型</th>
 <th>修改</th>
 <th>删除</th>
 </thead>
@@ -118,6 +127,9 @@
     {% else%}
     显示
     {% endif %}
+    </td>
+        <td>
+    {{entry.tooltype}}
     </td>
      <td>
     <a href="{{ url_for('update')}}?tool_id={{ entry.id }}">修改</a>

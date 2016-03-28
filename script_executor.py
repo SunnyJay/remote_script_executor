@@ -2,7 +2,7 @@
 """
     script_executor
     -------
-    A application which can execute remote python scripts for redis cluster.
+    A application which can execute remote python scripts for cluster.
     It is based on Flask tutorial 'Flaskr'.
     Author: Sun Nanjun<sun_coke007@163.com>
     Created on 2016-03-22
@@ -128,6 +128,14 @@ def config_set():
     configurations.set_cache_info(request.form['cache_info'])
     return redirect(url_for('manage_tool'))
 
+@app.route('/checklog')
+def checklog():
+    db = get_db()
+    cur = db.execute('select * from logs order by id desc') 
+    logs = cur.fetchall()
+    print len(logs)
+    return render_template('loglist.html',logs=logs)
+
 @app.route('/execute',methods=['POST'])
 def execute():
     if request.method == 'POST':
@@ -142,6 +150,7 @@ def execute():
         #print toolpath
         #print path
         sys.path.append(path)
+        is_success = 1;
         try:
             module_name=toolpath.split('.')[0]
        	    class_name=toolpath.split('.')[1]
@@ -156,9 +165,10 @@ def execute():
         except Exception,e:
             flash('Execute Error!')
             output = 'Exception:' + str(e)
+            is_success = 0 # False
         #output=module.fun()
-        db.execute('insert into logs (ip,tool_id,exec_time) values (?, ?, ?)',
-               [request.remote_addr, tool_id,time.strftime('%Y-%m-%d %H:%M:%S')])
+        db.execute('insert into logs (ip,tool_id,exec_time,is_success,args) values (?, ?, ?, ? ,?)',
+               [request.remote_addr, tool_id,time.strftime('%Y-%m-%d %H:%M:%S'),is_success,args])
         db.commit()
     return render_template('result.html',output=output, args=args)
 
@@ -174,9 +184,6 @@ def init():
     
     configurations.set_cache_info(cache_info)
     return configurations
-    print configurations.cache_info
-
-
 
 @app.route('/')
 def show_entries():
@@ -198,9 +205,10 @@ def add_entry():
         abort(401)
     db = get_db()
 
-    db.execute('insert into entries (title,toolpath,content,auth,showtag,addtime,hasargs) values (?, ?, ?, ?, ?, ?,?)',
+    db.execute('insert into entries (title,toolpath,content,auth,showtag,addtime,hasargs,tooltype) values (?, ?, ?, ?, ?, ?,?,?)',
                [request.form['title'], request.form['toolpath'],request.form['content'], 
-               request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),request.form['hasargs']])
+               request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),request.form['hasargs'],
+               request.form['tooltype']])
     db.commit()
     flash('Add Success!')
     return redirect(url_for('manage_tool'))
@@ -211,9 +219,10 @@ def update_entry():
         abort(401)
     db = get_db()
     
-    db.execute('update entries set title = ?,toolpath=?,content=?,auth=?,showtag=?,addtime=?,hasargs=? where id = ?',
+    db.execute('update entries set title = ?,toolpath=?,content=?,auth=?,showtag=?,addtime=?,hasargs=?,tooltype=? where id = ?',
                [request.form['title'], request.form['toolpath'],request.form['content'], 
-               request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),request.form['hasargs'],request.args.get("tool_id")])
+               request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),
+               request.form['hasargs'],request.args.get("tool_id"),request.form['tooltype']])
     db.commit()
     flash('Update Success!')
     return redirect(url_for('manage_tool'))

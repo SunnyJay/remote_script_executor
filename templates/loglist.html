@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block body %}
+  {% if session.logged_in %}
+  <center>
+  <h2>工具执行日志</h2>
+  <div style="overflow-x: auto; overflow-y: auto; height: 700px; ">
+  <table >
+
+  <thead>
+<th>日志编号</th>
+<th>用户IP</th>
+<th>工具ID</th>
+<th>工具参数</th>
+<th>是否成功</th>
+<th>执行时间</th>
+</thead>
+  {% for log in logs%}
+  <tr>
+  <td >
+  {{log.id}}
+    </td>
+    <td >
+{{log.ip}}
+    </td>
+       <td >
+{{log.tool_id}}
+    </td>
+        <td >
+{{log.args}}
+    </td>
+        <td >
+{%if log.tool_id == True %}
+{{'成功'}}
+{% else %}
+{{'失败'}}
+{% endif %}
+    </td>
+           <td >
+{{log.exec_time}}
+    </td>
+    </tr>
+    {% else %}
+  <em>目前没有任何日志</em>
+  {% endfor%}
+    </table>
+    </div>
+    </center>
+     {% endif %}
+{% endblock %}
