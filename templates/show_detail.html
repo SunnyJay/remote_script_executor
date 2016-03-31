@@ -5,16 +5,16 @@
 <center> 
 <table>
 <tr>
-<td>
+<td style="text-align: center;">
   {% if tool_titile %}
-  {{ tool_titile }}
+  <h3>{{ tool_titile }}</h3>
   {% endif %}
   </td>
 </tr>
 <tr>
 <td>
   {% if tool_des %}
-  简介：{{ tool_des }}
+  <h3 style="text-align: center;">简介</h3><pre>{{ tool_des }}</pre>
   {% endif %}
   </td>
   </tr>

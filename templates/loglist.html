@@ -29,7 +29,7 @@
 {{log.args}}
     </td>
         <td >
-{%if log.tool_id == True %}
+{%if log.is_success == 1 %}
 {{'成功'}}
 {% else %}
 {{'失败'}}

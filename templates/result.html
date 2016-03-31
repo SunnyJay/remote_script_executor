@@ -9,14 +9,9 @@
 {% endif %}
 </h3>
 {% if output %}
-
-	
-	{% if output.startswith('Exception') %}
-	<textarea name="content" rows="20" cols="150" style="color:red;">
-	{% else %}		
-	<textarea name="content" rows="20" cols="150" style="color:green;">
-			{% endif %} 
-			{{ output }}
+{% if output.startswith('Exception') %}
+<textarea  name="content" rows="20" cols="150" style="color:red;">{% else %}		
+<textarea name="content" rows="20" cols="150" style="color:green;">{% endif %}{{ output }}
 	</textarea>
 	</center>
 	{% endif %}

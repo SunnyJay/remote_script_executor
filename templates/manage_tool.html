@@ -102,6 +102,7 @@
   <table class="table">
 
     <thead>
+ <th>工具编号</th>
 <th>工具名称</th>
 <th>使用权限</th>
 <th>状态</th>
@@ -112,6 +113,9 @@
 
   {% for entry in entries %}
     <tr>
+    <td>
+    {{ entry.id }}
+    </td>
     <td><a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
     </td>
     <td>

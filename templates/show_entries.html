@@ -8,25 +8,26 @@
   <table id="table-7">
 
   <thead>
+<th>工具编号</th>
 <th>工具名称</th>
 <th>类型</th>
-<th>简介</th>
+<!-- <th>简介</th> -->
 </thead>
   {% for entry in entries %}
-  <tr>
+  
   {% if entry.auth == 1 and entry.showtag == 1 %}
+  <tr>
+    <td> 
+  {{ entry.id }}
+   </td> 
    <td> 
    <a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
    </td> 
    <td>
    {{ entry.tooltype }}
    </td>
-   <td>
-   {{ entry.content|safe }}
-   {% else%}
-   {% endif %}
-   </td>
    </tr>
+   {% endif %}
   {% else %}
   <em>目前没有任何工具</em>
   {% endfor %}

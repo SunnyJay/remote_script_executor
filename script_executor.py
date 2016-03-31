@@ -11,6 +11,7 @@
 import os
 import sys
 import time
+import  traceback
 import Configurations
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, session, g, redirect, url_for, abort, \
@@ -126,6 +127,10 @@ def config_set():
     #print request.form['cache_info']
     #print configurations.cache_info
     configurations.set_cache_info(request.form['cache_info'])
+    print 'fsdsd',request.form['cache_info']
+    #configurations.init_config()
+    #print configurations.cache_info
+    #print 'fff',request.form['cache_info']
     return redirect(url_for('manage_tool'))
 
 @app.route('/checklog')
@@ -152,6 +157,7 @@ def execute():
         sys.path.append(path)
         is_success = 1;
         try:
+            #init()
             module_name=toolpath.split('.')[0]
        	    class_name=toolpath.split('.')[1]
             method_name=toolpath.split('.')[2]
@@ -160,10 +166,12 @@ def execute():
             newclass = getattr(module,class_name)
             obj = newclass()
             obj.set_configurations(configurations)
+            print 'dfdff',configurations.cache_info
             method = getattr(obj,method_name)
-            output=method()
+            output=method(args)
         except Exception,e:
             flash('Execute Error!')
+            print  traceback.format_exc()
             output = 'Exception:' + str(e)
             is_success = 0 # False
         #output=module.fun()
@@ -181,7 +189,7 @@ def init():
     else:
     	cache_info = ret[0]
 
-    
+    #print 'ffff',cache_info
     configurations.set_cache_info(cache_info)
     return configurations
 
@@ -190,7 +198,7 @@ def show_entries():
     init()
     print app.config['DATABASE']
     db = get_db()
-    cur = db.execute('select * from entries order by id desc')
+    cur = db.execute('select * from entries')
     entries = cur.fetchall()
     cur = db.execute('select cache_info,system_notice from serverconfig')
     config = cur.fetchone()
@@ -222,7 +230,7 @@ def update_entry():
     db.execute('update entries set title = ?,toolpath=?,content=?,auth=?,showtag=?,addtime=?,hasargs=?,tooltype=? where id = ?',
                [request.form['title'], request.form['toolpath'],request.form['content'], 
                request.form['auth'],request.form['showtag'],time.strftime('%Y-%m-%d %H:%M:%S'),
-               request.form['hasargs'],request.args.get("tool_id"),request.form['tooltype']])
+               request.form['hasargs'],request.form['tooltype'],request.args.get("tool_id")])
     db.commit()
     flash('Update Success!')
     return redirect(url_for('manage_tool'))
