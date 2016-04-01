@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import Configurations
+import time
 '''
 @author: Administrator
 '''
@@ -57,25 +58,34 @@ class DssDataManager:
     #查找、统计seqId个数在指定范围内的mstpid
     def findMstpIdWhoseSeqIdIsInSection(self,args):
     	print args
-    	begin_num = args.split(' ')[0]
-    	end_num = args.split(' ')[1]
+    	begin_num = int(args.split(' ')[0])
+    	end_num = int(args.split(' ')[1])
         #begin_num = int(raw_input('Please input the begin number of seqId:\n'))
         #end_num = int(raw_input('Please input the end number of seqId:\n'))
         ret = ''
         if end_num<=begin_num:
             ret += 'Error Input!'
-            exit()
+            return ret
         count = 0
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
             mstpid_list = master.keys('*')
             
+            pipe = master.pipeline()
             for mstpid in mstpid_list:
-                mstpid_len =  master.hlen(mstpid)
-                if begin_num < mstpid_len < end_num:
+                hlen = pipe.hlen(mstpid)
+            lenlist = pipe.execute()
+            i = 0
+            while i < len(lenlist):
+                if begin_num < lenlist[i] < end_num:
                     count += 1
-                    print mstpid,master.hlen(mstpid)
-        ret += 'Rate is ' + str(count*1.0/int(self.findAllMstpIdNum(args))*100) + '%'
+                    ret += mstpid_list[i] + ' ' + str(lenlist[i]) + '\n'
+                i += 1
+                #print mstpid_len
+                #print type(begin_num)
+                
+        #print count*1.0/int(self.findAllMstpIdNum(args))*100
+        ret += 'Rate is %.2f%%' % (count*1.0/int(self.findAllMstpIdNum(args))*100)
         return ret
         
 
@@ -131,21 +141,31 @@ class DssDataManager:
 
     #打印集群上所有mstpid下的seqid数量 
     def findSeqNumOfAllMstpid(self,args):
-        dict = {}
+        ret = ''
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
+            #start=time.time()
             mstpid_list = master.keys('*')
+            #end=time.time()
+            #cost = end - start
+            #print cost
+            #print mstpid_list.__sizeof__()
+            pipe = master.pipeline()
+            #print type(pipe),pipe.__dict__
             for mstpid in mstpid_list:
-                seqid_list = master.hkeys(mstpid)
-                dict.setdefault(mstpid,len(seqid_list))
-        sorted_dict = sorted(dict.iteritems(), key=operator.itemgetter(1), reverse=True)    #根据seqid数量排序 默认升序
-        ret = ''
-        for item in sorted_dict:
-            ret += str(item[0]) + '\t' + str(item[1]) + '\n'
+            	hlen = pipe.hlen(mstpid)
+            lenlist = pipe.execute()
+            for i in range(len(mstpid_list)):
+                ret += str(mstpid_list[i]) + '\t' + str(lenlist[i]) + '\n' 
+            #print lenlist
+                #seqid_list = master.hkeys(mstpid)
+            #dict.setdefault(mstpid,hlen)
+            #del mstpid_list
+
+        #sorted_dict = sorted(dict.iteritems(), key=operator.itemgetter(1), reverse=True)    #根据seqid数量排序 默认升序
         return ret
                 
                 
-
     #删除集群中所有哈希存储结构为hashtable而不是ziplist的mstpid
     def deleteHashMstpId(self):
         hash_mstpid_dict = findHashMstpId()
@@ -157,21 +177,24 @@ class DssDataManager:
             master.delete(item)
         print 'deleted num:',len(hash_mstpid_dict)
 
-    #查找集群中所有哈希存储结构为hashtable而不是ziplist的mstpid，以及其比例
+     #查找集群中所有哈希存储结构为hashtable而不是ziplist的mstpid，以及其比例
     def findHashMstpId(self,args):
         findsets = {}
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
             mstpid_list = master.keys('*')
-            
+            pipe = master.pipeline()
             for mstpid in mstpid_list:
-                data_type = master.object('encoding',mstpid)
-                if data_type == 'hashtable':
-                    print mstpid, cache_node
-                    findsets.setdefault(mstpid,cache_node)
+                pipe.object('encoding',mstpid)
+            typelist = pipe.execute()
+            for i in range(len(typelist)):
+                if typelist[i] == 'hashtable':
+                    #print mstpid, cache_node
+                    findsets.setdefault(mstpid_list[i],cache_node)
         ret = ''
         ret += 'Rate is ' + str(len(findsets)*1.0/int(self.findAllMstpIdNum(args))*100) + '%' + '\n'
-        ret +=  str(findsets)
+        for i in findsets:
+            ret +=  i + '\t' + str(findsets[i]) + '\n'
         return ret
 
     #查找某个mstpid的内容
@@ -183,7 +206,7 @@ class DssDataManager:
         if isExists == False:
             return 'The mstpId is not exist!'
         master = self.sentinel_db1.master_for(location)
-        content = master.hgetall(mstpid_input) #返回乱序，因为python没有ziplist结构,存储成字典后因为哈希值乱序
+        content = master.hgetall(mstpid_input)  #返回乱序，因为python没有ziplist结构,存储成字典后因为哈希值乱序
         data_type = master.object('encoding',mstpid_input)
         master0 = self.sentinel.master_for(location)
         latest_seqId_0 = master0.get(mstpid_input.split('MSTPID')[0]+'SEQ_0')
@@ -192,8 +215,8 @@ class DssDataManager:
         latest_ackId_1 = master0.hget(mstpid_input.split('MSTPID')[0]+'ACK',1)
         
         ret += 'location:' + location + '\n'
-        ret += 'latest seqId 0:' + latest_seqId_0 + '\tlatest seqId 1:' + latest_seqId_1 + '\n'
-        ret += 'latest ackId 0:' + latest_ackId_0 + '\tlatest ackId 1:' + latest_ackId_1 + '\n'
+        ret += 'latest seqId 0:' + str(latest_seqId_0) + '\tlatest seqId 1:' + str(latest_seqId_1) + '\n'
+        ret += 'latest ackId 0:' + str(latest_ackId_0) + '\tlatest ackId 1:' + str(latest_ackId_1) + '\n'
         ret += 'data type:' + str(data_type) + '\n'
         ret += 'item num:' + str(len(content)) + '\n'
         ret += 'contents:' + '\n'

@@ -157,7 +157,7 @@ def execute():
         sys.path.append(path)
         is_success = 1;
         try:
-            #init()
+            init()
             module_name=toolpath.split('.')[0]
        	    class_name=toolpath.split('.')[1]
             method_name=toolpath.split('.')[2]
