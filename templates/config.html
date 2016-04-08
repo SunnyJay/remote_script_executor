@@ -8,7 +8,8 @@
     <form  action="{{ url_for('config_set') }}" method="post" class="add-entry">
       <dl>
         <dt><p align="top">系统公告:</p><textarea name="system_notice" rows="5" cols="40">{{system_notice}}</textarea>
-        <dt><p align="top">集群信息:</p><textarea name="cache_info" rows="5" cols="40">{{cache_info}}</textarea>
+        <dt><p align="top">Cache信息:</p><textarea name="cache_info" rows="5" cols="40">{{cache_info}}</textarea>
+        <dt><p align="top">Persistent信息:</p><textarea name="persistent_info" rows="5" cols="40">{{persistent_info}}</textarea>
       </dl>
       <dl style="text-align: center;">
       <input type="submit" value="保存" >

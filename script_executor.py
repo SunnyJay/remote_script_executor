@@ -105,15 +105,17 @@ def manage_tool():
 @app.route('/config')
 def config():
     db = get_db()
-    cur = db.execute('select cache_info,system_notice from serverconfig')
+    cur = db.execute('select cache_info,system_notice,persistent_info from serverconfig')
     ret = cur.fetchone()
     if ret == None:
     	cache_info =''
     	system_notice =''
+        persistent_info =''
     else:
     	cache_info = ret[0]
     	system_notice = ret[1]
-    return render_template('config.html',cache_info=cache_info,system_notice=system_notice)
+        persistent_info = ret[2]
+    return render_template('config.html',cache_info=cache_info,system_notice=system_notice,persistent_info=persistent_info)
 
 @app.route('/config_set',methods=['POST'])
 def config_set():
@@ -121,12 +123,13 @@ def config_set():
     db.execute('delete from serverconfig')
     db.commit()
     
-    db.execute('insert into serverconfig (cache_info,system_notice) values (?,?)',
-               [request.form['cache_info'],request.form['system_notice']])
+    db.execute('insert into serverconfig (cache_info,system_notice,persistent_info) values (?,?,?)',
+               [request.form['cache_info'],request.form['system_notice'],request.form['persistent_info']])
     db.commit()
     #print request.form['cache_info']
     #print configurations.cache_info
     configurations.set_cache_info(request.form['cache_info'])
+    configurations.set_persistent_info(request.form['persistent_info'])
     print 'fsdsd',request.form['cache_info']
     #configurations.init_config()
     #print configurations.cache_info
@@ -182,15 +185,18 @@ def execute():
 
 def init():
     db = get_db()
-    cur = db.execute('select cache_info from serverconfig')
+    cur = db.execute('select cache_info,persistent_info from serverconfig')
     ret = cur.fetchone()
     if ret == None:
     	cache_info =''
+        persistent_info =''
     else:
     	cache_info = ret[0]
+        persistent_info = ret[1]
 
     #print 'ffff',cache_info
     configurations.set_cache_info(cache_info)
+    configurations.set_persistent_info(persistent_info)
     return configurations
 
 @app.route('/')
@@ -206,6 +212,21 @@ def show_entries():
     system_notice = config[1]
     return render_template('show_entries.html', entries=entries,cache_info=cache_info,system_notice=system_notice)
 
+@app.route('/filter_tool',methods=['POST'])
+def filter_tool():
+    init()
+    #print app.config['DATABASE']
+    db = get_db()
+    if request.form['tooltype'] =='all':
+        cur = db.execute('select * from entries')
+    else:
+        cur = db.execute('select * from entries where tooltype = ?',[request.form['tooltype']])
+    entries = cur.fetchall()
+    cur = db.execute('select cache_info,system_notice from serverconfig')
+    config = cur.fetchone()
+    cache_info = config[0]
+    system_notice = config[1]
+    return render_template('show_entries.html', entries=entries,cache_info=cache_info,system_notice=system_notice)
 
 @app.route('/add', methods=['POST'])
 def add_entry():

@@ -4,7 +4,13 @@
 <center>
   <h2>目前提供如下工具</h2>
   </br>
-  
+
+  <form   method="post" >
+<input type="radio" name="tooltype" value="all" onClick="javascript:this.form.action='{{ url_for('filter_tool') }}';this.form.submit()" /> All
+<input type="radio" name="tooltype" value="redis" onClick="javascript:this.form.action='{{ url_for('filter_tool') }}';this.form.submit()" /> Redis
+<input type="radio" name="tooltype" value="mongodb"  onClick="javascript:this.form.action='{{ url_for('filter_tool') }}';this.form.submit()"/> MongoDB
+</form>
+
   <table id="table-7">
 
   <thead>
@@ -23,7 +29,7 @@
    <td> 
    <a href="{{ url_for('detail')}}?tool_id={{ entry.id }}">{{ entry.title }}</a>
    </td> 
-   <td>
+   <td id = 'type'>
    {{ entry.tooltype }}
    </td>
    </tr>
