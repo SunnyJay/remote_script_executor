@@ -1,62 +1,50 @@
 # -*- coding: utf-8 -*-
-import Configurations
-import time
-'''
-@author: Administrator
-'''
+"""
+    DssDataManager
+    -------
+    A class which includes various tools for the cache/redis cluster. 
+    And the tools are registered in the database.
+    Author: Sun Nanjun<sun_coke007@163.com>
+    Created on 2016-03-22
+"""
 import operator
+import configuration
+import time
 
 class DssDataManager:
 
+    def set_configurations(self,configurations):
+        self.configurations = configurations
+        self.init_config()
+
     def init_config(self):
-
         self.cache_info=self.configurations.cache_info
-
         self.sentinel_address=self.configurations.sentinel_address
         self.cache_address=self.configurations.cache_address
-        print  'cc',self.cache_address
         self.seninel_ip=self.configurations.seninel_ip
         self.seninel_port=self.configurations.seninel_port
         self.sentinel=self.configurations.sentinel
         self.sentinel_db1=self.configurations.sentinel_db1
 
-    def set_configurations(self,configurations_out):
-        self.configurations = configurations_out
-
-        #self.configurations.init_config()
-        self.init_config()
-        print 'pppppppp',self.configurations.cache_info
-        print 'pppppppp',configurations_out.cache_info
-
-    #测试web
-    def testWeb(self):
-        s = self.cache_info + '\n'
-        for i in range(0,6):
-            s += 'I love ' + str(i) + '\n'
-        return s
-
-    #查找cache集群的总的mstpid个数
+    # Finds the total number of mstpid in the cache cluster.
     def findAllMstpIdNum(self,args):
-         
         all_num_mstpid = 0
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
             mstpid_list = master.keys('*')
             all_num_mstpid += len(mstpid_list)
-        #print 'xx',all_num_mstpid
+
         return str(all_num_mstpid)
 
-    #查找、统计seqId个数在指定范围内的mstpid
+    # Finds the mstpid whose seqid's number is in the specified range. 
     def findMstpIdWhoseSeqIdIsInSection(self,args):
-    	print args
     	begin_num = int(args.split(' ')[0])
     	end_num = int(args.split(' ')[1])
-        #begin_num = int(raw_input('Please input the begin number of seqId:\n'))
-        #end_num = int(raw_input('Please input the end number of seqId:\n'))
         ret = ''
-        if end_num<=begin_num:
+        if end_num <= begin_num:
             ret += 'Error Input!'
             return ret
+
         count = 0
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
@@ -66,21 +54,19 @@ class DssDataManager:
             for mstpid in mstpid_list:
                 hlen = pipe.hlen(mstpid)
             lenlist = pipe.execute()
+
             i = 0
             while i < len(lenlist):
                 if begin_num < lenlist[i] < end_num:
                     count += 1
                     ret += mstpid_list[i] + ' ' + str(lenlist[i]) + '\n'
                 i += 1
-                #print mstpid_len
-                #print type(begin_num)
-                
-        #print count*1.0/int(self.findAllMstpIdNum(args))*100
+
         ret += 'Rate is %.2f%%' % (count*1.0/int(self.findAllMstpIdNum(args))*100)
         return ret
         
 
-    #清库 慎用
+    # Flushes the db
     def flushDB(self,args):
         ret = ''
         confirm_str = args.split(' ')[0]
@@ -100,9 +86,9 @@ class DssDataManager:
 
         return 'flush db success!\n' + ret
 
-    #打印目前进些写操作的客户端ip
+    # Print the ip of the clients which is writing.
     def printWriteClient(self,args):
-        #while True:
+
         ret = ''
         for cache_node in self.cache_address:
         	master = self.sentinel.master_for(cache_node)
@@ -116,39 +102,27 @@ class DssDataManager:
         			ret += ip_set + '\n'    
         	ret += '*******************************************' + '\n'
         return ret
-                    
-                    
-                    
-        
 
-    #打印集群上所有mstpid下的seqid数量 
+    # Finds the seqid number of each mstpid in the cache cluster.
     def findSeqNumOfAllMstpid(self,args):
         ret = ''
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
-            #start=time.time()
             mstpid_list = master.keys('*')
-            #end=time.time()
-            #cost = end - start
-            #print cost
-            #print mstpid_list.__sizeof__()
             pipe = master.pipeline()
-            #print type(pipe),pipe.__dict__
+
             for mstpid in mstpid_list:
             	hlen = pipe.hlen(mstpid)
             lenlist = pipe.execute()
+
             for i in range(len(mstpid_list)):
                 ret += str(mstpid_list[i]) + '\t' + str(lenlist[i]) + '\n' 
-            #print lenlist
-                #seqid_list = master.hkeys(mstpid)
-            #dict.setdefault(mstpid,hlen)
-            #del mstpid_list
 
-        #sorted_dict = sorted(dict.iteritems(), key=operator.itemgetter(1), reverse=True)    #根据seqid数量排序 默认升序
+        #sorted_dict = sorted(dict.iteritems(), key=operator.itemgetter(1), reverse=True)    #sorted by the number of seqid
         return ret
                 
                 
-    #删除集群中所有哈希存储结构为hashtable而不是ziplist的mstpid
+    # Deletes the mstpid whose structure is hashtable rather than ziplist in the cache cluster
     def deleteHashMstpId(self):
         hash_mstpid_dict = findHashMstpId()
         confirm=raw_input('Are you sure to delete?(yes/no)\n')
@@ -159,7 +133,7 @@ class DssDataManager:
             master.delete(item)
         print 'deleted num:',len(hash_mstpid_dict)
 
-     #查找集群中所有哈希存储结构为hashtable而不是ziplist的mstpid，以及其比例
+    # Finds the mstpid whose structure is hashtable rather than ziplist in the cache cluster and count its ratio.
     def findHashMstpId(self,args):
         findsets = {}
         for cache_node in self.cache_address:
@@ -171,7 +145,6 @@ class DssDataManager:
             typelist = pipe.execute()
             for i in range(len(typelist)):
                 if typelist[i] == 'hashtable':
-                    #print mstpid, cache_node
                     findsets.setdefault(mstpid_list[i],cache_node)
         ret = ''
         ret += 'Rate is ' + str(len(findsets)*1.0/int(self.findAllMstpIdNum(args))*100) + '%' + '\n'
@@ -179,16 +152,17 @@ class DssDataManager:
             ret +=  i + '\t' + str(findsets[i]) + '\n'
         return ret
 
-    #查找某个mstpid的内容
+    # Finds the contents of one mstpid
     def findContentOfMstpId(self,args):
-    	ret = ''
-        #mstpid_input = raw_input('Please input the mstpid:\n')
+    	
         mstpid_input = args
         isExists,location = self.findWhereIsMstpId(mstpid_input)
+
         if isExists == False:
             return 'The mstpId is not exist!'
+
         master = self.sentinel_db1.master_for(location)
-        content = master.hgetall(mstpid_input)  #返回乱序，因为python没有ziplist结构,存储成字典后因为哈希值乱序
+        content = master.hgetall(mstpid_input)  # 'hgetall' command returns the unordered results.
         data_type = master.object('encoding',mstpid_input)
         master0 = self.sentinel.master_for(location)
         latest_seqId_0 = master0.get(mstpid_input.split('MSTPID')[0]+'SEQ_0')
@@ -196,19 +170,22 @@ class DssDataManager:
         latest_ackId_0 = master0.hget(mstpid_input.split('MSTPID')[0]+'ACK',0)
         latest_ackId_1 = master0.hget(mstpid_input.split('MSTPID')[0]+'ACK',1)
         
+        ret = ''
         ret += 'location:' + location + '\n'
         ret += 'latest seqId 0:' + str(latest_seqId_0) + '\tlatest seqId 1:' + str(latest_seqId_1) + '\n'
         ret += 'latest ackId 0:' + str(latest_ackId_0) + '\tlatest ackId 1:' + str(latest_ackId_1) + '\n'
         ret += 'data type:' + str(data_type) + '\n'
         ret += 'item num:' + str(len(content)) + '\n'
         ret += 'contents:' + '\n'
+
         seqid_list = master.hkeys(mstpid_input)
         for item in seqid_list:
             ret += item + '\t' + content[item] + '\n'
+
         return ret
         
 
-    #查找是否存某个msgid及其位置
+    # Finds the msgid
     def findWhereIsMsgId(self,args):
     	msgId = args
     	ret = ''
@@ -225,7 +202,7 @@ class DssDataManager:
         return ret
         #return isExists,location
 
-    #查找是否存在某个mstpid及其位置
+    # Finds the mstpid
     def findWhereIsMstpId(self,mstpid):
         isExists = False
         location = ''
@@ -234,28 +211,27 @@ class DssDataManager:
             isExists = master.exists(mstpid)
             if isExists == True:
                 location= cache_node
-                print 'mstpid location:',cache_node
                 break
-        if isExists == False:
-                print 'can not find mstpid:',mstpid
+                
         return isExists,location
 
-    #查找指定mstpid和seqid下的msgid与对应msgbody
+    # Finds the msgid and msgbody of the specified mstpid & seqid
     def findMsg(self,args):
-        #mstpid_input = raw_input('Please input the mstpid:\n')
-        #seqid_input = raw_input('Please input the seqid:\n')
         mstpid_input = args.split(' ')[0]
     	seqid_input = args.split(' ')[1]
     	ret = ''
+
         for cache_node in self.cache_address:
             master = self.sentinel_db1.master_for(cache_node)
             msgid = master.hget(mstpid_input,seqid_input)
             if msgid != None:
                 ret += 'mstpid location:' + cache_node + '\n'
                 break
+
         if msgid == None:
             ret += 'can not find the msgid you want\n'  
             return ret 
+
         for cache_node in self.cache_address:
             master = self.sentinel.master_for(cache_node)
             msgbody = master.get(msgid)
@@ -264,11 +240,13 @@ class DssDataManager:
                 ret += 'msgid:' + msgid + '\n'
                 ret += 'msgbody:\n' + 'todo' + '\n'
                 break
+
         return ret
 
+    # Finds the stats of the cluster
     def clusterStats(self,args):
         ret = ''
-        print len(self.cache_address)
+
         for cache_node in self.cache_address:
             master = self.sentinel.master_for(cache_node)
             mem_size = master.info('memory')["used_memory_human"]
@@ -282,31 +260,32 @@ class DssDataManager:
             ret += 'mem_size:' + mem_size + '\n'
             ret += 'dbsize0:' + str(dbsize0) + ' dbsize1:' + str(dbsize1) + '\n'
             ret += 'role:' + role + '\n'
-            #print 'slave_num:',slave_num
             ret += 'slave_info:' + str(slave_info) + '\n'
             ret += 'uptime:'+ str(uptime) + ' days' + '\n'
-        #print ret
+
         return ret
 
+    # Executes redis commands for the cluster
     def commandExecutor(self,args):
 		command_input = args
-		#command_input=raw_input('Please input the command you want to execute:\n')
 		command_len=len(command_input.split(' '))
 		command=command_input.split(' ')[0]
 		args=command_input.split(' ')
 		args.remove(command)
 		ret = ''
+
 		for cache_node in self.cache_address:
 			master = self.sentinel.master_for(cache_node)
 			ret += '*******************************************' + cache_node + '*******************************************' + '\n'
 			if command_len == 1:
-				ret += str(master.execute_command(command))+'\n'
+				ret += str(master.execute_command(command)) + '\n'
 			elif command_len == 2:
-				ret += str(master.execute_command(command,args[0]))+'\n'
+				ret += str(master.execute_command(command,args[0])) + '\n'
 			else:
 				ret += str(master.execute_command(command,args[0],args[1])) + '\n'
+
 		return ret
 
+    # Returns the cache_info
     def cache_info_export(self,args):
-		
 		return self.cache_info + '\n'
