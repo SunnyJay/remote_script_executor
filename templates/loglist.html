@@ -3,9 +3,14 @@
   {% if session.logged_in %}
   <center>
   <h2>工具执行日志</h2>
+    <form action="{{ url_for('clear_logs') }}" method= "post" >
+  <br>
+   <input type="submit" value="清空日志" >
+   <br>
+  </form>
+
   <div style="overflow-x: auto; overflow-y: auto; height: 700px; ">
   <table >
-
   <thead>
 <th>日志编号</th>
 <th>用户IP</th>

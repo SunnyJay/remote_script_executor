@@ -126,15 +126,19 @@ def config_set():
     db.execute('insert into serverconfig (cache_info,system_notice,persistent_info) values (?,?,?)',
                [request.form['cache_info'],request.form['system_notice'],request.form['persistent_info']])
     db.commit()
-    #print request.form['cache_info']
-    #print configurations.cache_info
+
     configurations.set_cache_info(request.form['cache_info'])
     configurations.set_persistent_info(request.form['persistent_info'])
     print 'fsdsd',request.form['cache_info']
-    #configurations.init_config()
-    #print configurations.cache_info
-    #print 'fff',request.form['cache_info']
+
     return redirect(url_for('manage_tool'))
+
+@app.route('/clear_logs',methods=['POST'])
+def clear_logs():
+    db = get_db()
+    db.execute('delete from logs')
+    db.commit()
+    return redirect(url_for('checklog'))
 
 @app.route('/checklog')
 def checklog():

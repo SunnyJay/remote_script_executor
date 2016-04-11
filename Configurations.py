@@ -5,15 +5,6 @@ from pymongo import MongoClient
 '''
 
 class Configuration:
-	cache_info=''
-	sentinel_address=''
-	cache_address=''
-	seninel_ip=''
-	seninel_port=''
-	sentinel=None
-	sentinel_db1=None
-	#def set_cache_info(self,cache_info):
-	#	self.cache_info = cache_info
 		
 	def set_cache_info(self,cache_info):
 		self.cache_info = cache_info
@@ -29,10 +20,10 @@ class Configuration:
 
 	def set_persistent_info(self,persistent_info):
 		self.persistent_info = persistent_info
-		print 'tttt' + persistent_info
+		#print 'tttt' + persistent_info
 		self.replcaset_info = self.persistent_info.split(';')
 		self.mongo_client = []
 		for replcaset_unit in self.replcaset_info:
 			self.mongo_client.append(MongoClient(replcaset_unit.split('_')[0], replicaset = 'PSU_' + replcaset_unit.split('_')[0]))
 		#print self.mongo_client
-		#print 'eeee' , self.mongo_client[0].admin.command('replSetGetConfig')
+		

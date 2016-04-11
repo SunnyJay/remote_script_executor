@@ -3,7 +3,7 @@
 @author: Administrator
 '''
 import operator
-from bson.json_util import dumps # bson
+from bson.json_util import dumps
 
 class DssDataManagerMongo:
     def init_config(self):
@@ -188,22 +188,38 @@ class DssDataManagerMongo:
         		return ret
     	return 'nothing found...'
 
-  #   def commandExecutor(self,args):
-		# command_input = args
-		# #command_input=raw_input('Please input the command you want to execute:\n')
-		# command_len=len(command_input.split(' '))
-		# command=command_input.split(' ')[0]
-		# args=command_input.split(' ')
-		# args.remove(command)
-		# ret = ''
-		# for cache_node in self.cache_address:
-		# 	master = self.sentinel.master_for(cache_node)
-		# 	ret += '*******************************************' + cache_node + '*******************************************' + '\n'
-		# 	if command_len == 1:
-		# 		ret += str(master.execute_command(command))+'\n'
-		# 	elif command_len == 2:
-		# 		ret += str(master.execute_command(command,args[0]))+'\n'
-		# 	else:
-		# 		ret += str(master.execute_command(command,args[0],args[1])) + '\n'
-		# return ret
+# 列出某节点下的所有的数据库
+    def findDb(self,args):
+        ret = ''
+        node_id = args.split(' ')[0]
+
+        index = 0
+        for info in self.replcaset_info:
+            if node_id in info:
+                break
+            index += 1
+        persistent_node = self.mongo_client[index]
+        db_name_list = persistent_node.database_names()
+
+        ret += 'db num:' + str(len(db_name_list)) + '\n\n'
+        for db_name in db_name_list:
+            ret += db_name + '\n'
+        return ret
+
+    # 清库脚本
+    def flushDb(self,args):
+        ret = ''
+        confirm_str = args.split(' ')[0]
+        if confirm_str != 'OK':
+            return 'did nothing'
+        try:
+            for persistent_node in self.mongo_client:
+                db_name_list = persistent_node.database_names()
+                for db_name in db_name_list:
+                    if 't_MSGID_SEQID_' in db_name or 't_MESSAGE_' in db_name or 't_SEQID' in db_name or 't_ACK_SEQID' in db_name:
+                        print 'flush....'
+                    #persistent_node.drop_database(db_name)
+        except Exception:
+            raise
+        return 'flush db success!'
 

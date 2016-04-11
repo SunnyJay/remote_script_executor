@@ -8,15 +8,6 @@ import operator
 
 class DssDataManager:
 
-    configurations = None
-    cache_info=''
-    sentinel_address=''
-    cache_address=''
-    seninel_ip=''
-    seninel_port=''
-    sentinel=None
-    sentinel_db1=None
-
     def init_config(self):
 
         self.cache_info=self.configurations.cache_info
@@ -90,33 +81,24 @@ class DssDataManager:
         
 
     #清库 慎用
-    def flushDB(self):
-        for cache_node in cache_address:
-            print cache_node
-        choice = raw_input("Please input the cache address(like 'ip:port') you want to flush. 'all' represents flush all cach nodes")
-        
-        if choice != all:
-            confirm = raw_input('Are you sure to flushDB the cache node? yes/no')
-            if confirm != 'yes':
-                exit()
-            master0 = sentinel.master_for(choice)
-            master1= sentinel_db1.master_for(choice)
-            master0.flushDB()
-            master1.flushDB()
-        else:
-            confirm = raw_input('Are you sure to flushDB all cache nodes? yes/no')
-            if confirm != 'yes':
-                exit()
-            for cache_node in cache_address:
-                master0 = sentinel.master_for(cache_node)
-                master1= sentinel_db1.master_for(cache_node)
-                master0.flushDB()
-                master1.flushDB()
+    def flushDB(self,args):
+        ret = ''
+        confirm_str = args.split(' ')[0]
+        if confirm_str != 'OK':
+            return 'did nothing'
+
+        for cache_node in self.cache_address:
+            master0 = self.sentinel.master_for(cache_node)
+            master1= self.sentinel_db1.master_for(cache_node)
+            #master0.flushDB()
+            #master1.flushDB()
             
-        for cache_node in cache_address:
-            master0 = sentinel.master_for(cache_node)
-            master1= sentinel_db1.master_for(cache_node)
-            print cache_node,'\t',master0.dbsize(),'\t',master1.dbsize()
+        for cache_node in self.cache_address:
+            master0 = self.sentinel.master_for(cache_node)
+            master1= self.sentinel_db1.master_for(cache_node)
+            ret += cache_node + '\tdb0:' + str(master0.dbsize()) +'\tdb1:' + str(master1.dbsize()) + '\n'
+
+        return 'flush db success!\n' + ret
 
     #打印目前进些写操作的客户端ip
     def printWriteClient(self,args):
