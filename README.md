@@ -1,2 +1,5 @@
-本项目包含多种针对Redis集群开发的实用运维工具，并且可对工具进行在线管理和远程执行 
-后续更新...
+This is an web application which can manage and execute remote python scripts for Redis or MongoDB cluster.
+It is based on Flask+Python+Sqlite3.
+
+Author: Sun Nanjun<sun_coke007@163.com>
+Created on 2016-03-22
