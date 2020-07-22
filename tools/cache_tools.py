@@ -30,8 +30,8 @@ class CacheTools:
     def fetch_all_mstp_id_num(self,args):
         all_num_mstpid = 0
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            mstpid_list = master.keys('*')
+            main = self.sentinel_db1.main_for(cache_node)
+            mstpid_list = main.keys('*')
             all_num_mstpid += len(mstpid_list)
 
         return str(all_num_mstpid)
@@ -47,10 +47,10 @@ class CacheTools:
 
         count = 0
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            mstpid_list = master.keys('*')
+            main = self.sentinel_db1.main_for(cache_node)
+            mstpid_list = main.keys('*')
             
-            pipe = master.pipeline()
+            pipe = main.pipeline()
             for mstpid in mstpid_list:
                 hlen = pipe.hlen(mstpid)
             lenlist = pipe.execute()
@@ -74,15 +74,15 @@ class CacheTools:
             return 'did nothing'
 
         for cache_node in self.cache_address:
-            master0 = self.sentinel.master_for(cache_node)
-            master1= self.sentinel_db1.master_for(cache_node)
-            #master0.flushDB()
-            #master1.flushDB()
+            main0 = self.sentinel.main_for(cache_node)
+            main1= self.sentinel_db1.main_for(cache_node)
+            #main0.flushDB()
+            #main1.flushDB()
             
         for cache_node in self.cache_address:
-            master0 = self.sentinel.master_for(cache_node)
-            master1= self.sentinel_db1.master_for(cache_node)
-            ret += cache_node + '\tdb0:' + str(master0.dbsize()) +'\tdb1:' + str(master1.dbsize()) + '\n'
+            main0 = self.sentinel.main_for(cache_node)
+            main1= self.sentinel_db1.main_for(cache_node)
+            ret += cache_node + '\tdb0:' + str(main0.dbsize()) +'\tdb1:' + str(main1.dbsize()) + '\n'
 
         return 'flush db success!\n' + ret
 
@@ -90,8 +90,8 @@ class CacheTools:
     def fetch_writing_client_ip(self,args):
         ret = ''
         for cache_node in self.cache_address:
-        	master = self.sentinel.master_for(cache_node)
-        	client_list = master.client_list()
+        	main = self.sentinel.main_for(cache_node)
+        	client_list = main.client_list()
         	ip_set = set()
         	for client in client_list:
         		cmd = client['cmd']
@@ -106,9 +106,9 @@ class CacheTools:
     def fetch_seq_num_of_each_mstpid(self,args):
         ret = ''
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            mstpid_list = master.keys('*')
-            pipe = master.pipeline()
+            main = self.sentinel_db1.main_for(cache_node)
+            mstpid_list = main.keys('*')
+            pipe = main.pipeline()
 
             for mstpid in mstpid_list:
             	hlen = pipe.hlen(mstpid)
@@ -127,17 +127,17 @@ class CacheTools:
         if confirm != 'yes':
             exit()
         for item in hash_mstpid_dict:
-            master = sentinel_db1.master_for(hash_mstpid_dict[item])
-            master.delete(item)
+            main = sentinel_db1.main_for(hash_mstpid_dict[item])
+            main.delete(item)
         print 'deleted num:',len(hash_mstpid_dict)
 
     # fetches the mstpid whose structure is hashtable rather than ziplist in the cache cluster and count its ratio.
     def fetch_hash_mstp_id(self,args):
         findsets = {}
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            mstpid_list = master.keys('*')
-            pipe = master.pipeline()
+            main = self.sentinel_db1.main_for(cache_node)
+            mstpid_list = main.keys('*')
+            pipe = main.pipeline()
             for mstpid in mstpid_list:
                 pipe.object('encoding',mstpid)
             typelist = pipe.execute()
@@ -158,14 +158,14 @@ class CacheTools:
         if isExists == False:
             return 'The mstpId is not exist!'
 
-        master = self.sentinel_db1.master_for(location)
-        content = master.hgetall(mstpid_input)  # 'hgetall' command returns the unordered results.
-        data_type = master.object('encoding',mstpid_input)
-        master0 = self.sentinel.master_for(location)
-        latest_seqId_0 = master0.get(mstpid_input + 'SEQ_0')
-        latest_seqId_1 = master0.get(mstpid_input + 'SEQ_1')
-        latest_ackId_0 = master0.hget(mstpid_input + 'ACK',0)
-        latest_ackId_1 = master0.hget(mstpid_input +'ACK',1)
+        main = self.sentinel_db1.main_for(location)
+        content = main.hgetall(mstpid_input)  # 'hgetall' command returns the unordered results.
+        data_type = main.object('encoding',mstpid_input)
+        main0 = self.sentinel.main_for(location)
+        latest_seqId_0 = main0.get(mstpid_input + 'SEQ_0')
+        latest_seqId_1 = main0.get(mstpid_input + 'SEQ_1')
+        latest_ackId_0 = main0.hget(mstpid_input + 'ACK',0)
+        latest_ackId_1 = main0.hget(mstpid_input +'ACK',1)
         
         ret = ''
         ret += 'location:' + location + '\n'
@@ -175,7 +175,7 @@ class CacheTools:
         ret += 'item num:' + str(len(content)) + '\n'
         ret += 'contents:' + '\n'
 
-        seqid_list = master.hkeys(mstpid_input)
+        seqid_list = main.hkeys(mstpid_input)
         for item in seqid_list:
             ret += item + '\t' + content[item] + '\n'
 
@@ -187,8 +187,8 @@ class CacheTools:
     	ret = ''
         isExists = False
         for cache_node in self.cache_address:
-            master = self.sentinel.master_for(cache_node)
-            isExists = master.exists(msgId)
+            main = self.sentinel.main_for(cache_node)
+            isExists = main.exists(msgId)
             if isExists == True:
                 location = cache_node
                 ret += 'msgId location:' + cache_node
@@ -203,8 +203,8 @@ class CacheTools:
         isExists = False
         location = ''
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            isExists = master.exists(mstpid + 'MSTPID')
+            main = self.sentinel_db1.main_for(cache_node)
+            isExists = main.exists(mstpid + 'MSTPID')
             if isExists == True:
                 location= cache_node
                 break
@@ -218,8 +218,8 @@ class CacheTools:
     	ret = ''
 
         for cache_node in self.cache_address:
-            master = self.sentinel_db1.master_for(cache_node)
-            msgid = master.hget(mstpid_input,seqid_input)
+            main = self.sentinel_db1.main_for(cache_node)
+            msgid = main.hget(mstpid_input,seqid_input)
             if msgid != None:
                 ret += 'mstpid location:' + cache_node + '\n'
                 break
@@ -229,8 +229,8 @@ class CacheTools:
             return ret 
 
         for cache_node in self.cache_address:
-            master = self.sentinel.master_for(cache_node)
-            msgbody = master.get(msgid)
+            main = self.sentinel.main_for(cache_node)
+            msgbody = main.get(msgid)
             if msgbody != None:
                 ret += 'message location:' + cache_node + '\n'
                 ret += 'msgid:' + msgid + '\n'
@@ -244,19 +244,19 @@ class CacheTools:
         ret = ''
 
         for cache_node in self.cache_address:
-            master = self.sentinel.master_for(cache_node)
-            mem_size = master.info('memory')["used_memory_human"]
-            dbsize0 = master.info('keyspace')["db0"]['keys']
-            dbsize1 = master.info('keyspace')["db1"]['keys']
-            role = master.info('replication')['role']
-            slave_num = master.info('replication')["connected_slaves"]
-            slave_info = master.info('replication')["slave0"]
-            uptime = master.info('server')["uptime_in_days"]
+            main = self.sentinel.main_for(cache_node)
+            mem_size = main.info('memory')["used_memory_human"]
+            dbsize0 = main.info('keyspace')["db0"]['keys']
+            dbsize1 = main.info('keyspace')["db1"]['keys']
+            role = main.info('replication')['role']
+            subordinate_num = main.info('replication')["connected_subordinates"]
+            subordinate_info = main.info('replication')["subordinate0"]
+            uptime = main.info('server')["uptime_in_days"]
             ret += '*******************************************' + cache_node + '*******************************************' + '\n'
             ret += 'mem_size:' + mem_size + '\n'
             ret += 'dbsize0:' + str(dbsize0) + ' dbsize1:' + str(dbsize1) + '\n'
             ret += 'role:' + role + '\n'
-            ret += 'slave_info:' + str(slave_info) + '\n'
+            ret += 'subordinate_info:' + str(subordinate_info) + '\n'
             ret += 'uptime:'+ str(uptime) + ' days' + '\n'
 
         return ret
@@ -271,14 +271,14 @@ class CacheTools:
 		ret = ''
 
 		for cache_node in self.cache_address:
-			master = self.sentinel.master_for(cache_node)
+			main = self.sentinel.main_for(cache_node)
 			ret += '*******************************************' + cache_node + '*******************************************' + '\n'
 			if command_len == 1:
-				ret += str(master.execute_command(command)) + '\n'
+				ret += str(main.execute_command(command)) + '\n'
 			elif command_len == 2:
-				ret += str(master.execute_command(command,args[0])) + '\n'
+				ret += str(main.execute_command(command,args[0])) + '\n'
 			else:
-				ret += str(master.execute_command(command,args[0],args[1])) + '\n'
+				ret += str(main.execute_command(command,args[0],args[1])) + '\n'
 
 		return ret
 
